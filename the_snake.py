@@ -67,7 +67,7 @@ class Apple(GameObject):
 
     def randomize_position(self):
         """Установка случайной позиции яблока в игровом окне."""
-        self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE, 
+        self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
                          randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
 
     def draw(self, surface):
@@ -138,7 +138,7 @@ class Snake(GameObject):
         for position in self.positions[:-1]:
             rect = (
                 pygame.Rect((position[0], position[1]), (GRID_SIZE, GRID_SIZE))
-            )  
+            )
             pygame.draw.rect(surface, self.body_color, rect)
             pygame.draw.rect(surface, BORDER_COLOR, rect, 1)
 
@@ -199,7 +199,7 @@ def main():
         snake.move()
         if snake.get_head_position() == apple.position:
             snake.length += 1
-            apple.randomize_position() 
+            apple.randomize_position()
 
         if snake.get_head_position() in snake.positions[1:]:
             running = False
