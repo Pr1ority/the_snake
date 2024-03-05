@@ -53,9 +53,8 @@ class GameObject:
         """Отрисовка одной ячейки."""
         if color is None:
             color = self.body_color
-        rect = pygame.Rect((position[0], position[1]), (GRID_SIZE, GRID_SIZE))
+        rect = pygame.Rect((position), (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, color, rect)
-        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 class Apple(GameObject):
@@ -69,16 +68,19 @@ class Apple(GameObject):
             body_color (tuple): Цвет яблока.
         """
         super().__init__()
+        self.GRID_SIZE = 20
         self.position = self.randomize_position(occupied_positions)
         self.body_color = body_color
 
     def randomize_position(self, occupied_positions):
         """Установка случайной позиции яблока в игровом окне."""
         while True:
-            new_position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
-                            randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
+            new_position = (randint(0, GRID_WIDTH - 1) * self.GRID_SIZE,
+                            randint(0, GRID_HEIGHT - 1) * self.GRID_SIZE)
             if new_position not in occupied_positions:
-                return new_position
+                self.position = new_position
+                break
+        return self.position
 
     def draw(self):
         """Отрисовка яблока."""
@@ -95,13 +97,8 @@ class Snake(GameObject):
             position (tuple): Кортеж координат головы змейки (head_x, head_y).
             body_color (tuple): Цвет змейки.
         """
-        super().__init__(body_color)
-        self.length = 1
-        self.positions = [position]
-        self.direction = RIGHT
+        super().__init__(position, body_color)
         self.last = None
-        self.position = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT // 2))
-        self.body_color = body_color
         self.reset()
 
     def update_direction(self, direction):
@@ -119,12 +116,14 @@ class Snake(GameObject):
         self.position = (head_x, head_y)
         self.positions.insert(0, self.position)
         if len(self.positions) > self.length:
-            self.positions.pop()
+            tail = self.positions.pop()
+            self.draw_cell(tail, BOARD_BACKGROUND_COLOR)
 
     def draw(self):
         """Отрисовка змейки."""
-        for position in self.positions:
-            self.draw_cell(position)
+        self.draw_cell(self.positions[0], self.body_color)
+        if len(self.positions) > self.length:
+            self.draw_cell(self.positions[-1], BOARD_BACKGROUND_COLOR)
 
     def get_head_position(self):
         """Возврат позиции головы змейки."""
@@ -132,9 +131,10 @@ class Snake(GameObject):
 
     def reset(self):
         """Сброс змейки к начальному состоянию."""
-        self.lenght = 1
         self.positions = [self.position]
         self.direction = RIGHT
+        self.length = 1
+        self.position = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT // 2))
 
 
 def handle_keys(game_object):
@@ -156,27 +156,27 @@ def handle_keys(game_object):
 
 def main():
     """Основная функция игры."""
-    snake = Snake(SNAKE_COLOR)
-    occupied_positions = [snake.position]
-    apple = Apple(occupied_positions)
+    snake = Snake()
+    apple = Apple(snake.positions)
+
+    screen.fill(BOARD_BACKGROUND_COLOR)
 
     while True:
         handle_keys(snake)
+
+        if snake.get_head_position() == apple.position:
+            snake.length += 1
+            apple.randomize_position(snake.positions)
 
         snake.move()
 
         if snake.get_head_position() in snake.positions[1:]:
             screen.fill(BOARD_BACKGROUND_COLOR)
-            break
+            snake.reset()
+            apple.position = apple.randomize_position(snake.positions)
 
-        if snake.get_head_position() == apple.position:
-            snake.length += 1
-            apple.position = apple.randomize_position(occupied_positions)
-            occupied_positions.append(apple.position)
-
-        screen.fill(BOARD_BACKGROUND_COLOR)
-        snake.draw()
         apple.draw()
+        snake.draw()
 
         pygame.display.update()
         clock.tick(SPEED)
