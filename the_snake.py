@@ -49,19 +49,14 @@ class GameObject:
         """Отрисовка игрового объекта."""
         pass
 
-    def draw_cell(self, position, color=None, with_border=False):
+    def draw_cell(self, position, color=None, border_color=None):
         """Отрисовка одной ячейки."""
-        if color is None:
-            color = self.body_color
-        if with_border:
-            rect_outer = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, BORDER_COLOR, rect_outer)
-            rect_inner = pygame.Rect(position[0] + 1, position[1] + 1,
-                                     GRID_SIZE - 2, GRID_SIZE - 2)
-            pygame.draw.rect(screen, color, rect_inner)
-        else:
-            rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, color, rect)
+        rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
+
+        pygame.draw.rect(screen, color, rect)
+
+        if border_color is not None:
+            pygame.draw.rect(screen, border_color, rect, 1)
 
 
 class Apple(GameObject):
@@ -87,7 +82,7 @@ class Apple(GameObject):
 
     def draw(self):
         """Отрисовка яблока."""
-        self.draw_cell(self.position, with_border=True)
+        self.draw_cell(self.position, APPLE_COLOR, BORDER_COLOR)
 
 
 class Snake(GameObject):
@@ -111,16 +106,15 @@ class Snake(GameObject):
         """Обновление позиции змейки в связи с выбранным направлением."""
         head_x, head_y = self.position
         point_x, point_y = self.direction
-        head_x = (head_x + point_x * GRID_SIZE) % SCREEN_WIDTH
-        head_y = (head_y + point_y * GRID_SIZE) % SCREEN_HEIGHT
 
         self.last = self.positions[-1]
-        self.position = (head_x, head_y)
+        self.position = ((head_x + point_x * GRID_SIZE) % SCREEN_WIDTH,
+                         (head_y + point_y * GRID_SIZE) % SCREEN_HEIGHT)
         self.positions.insert(0, self.position)
 
     def draw(self):
         """Отрисовка змейки."""
-        self.draw_cell(self.positions[0], with_border=True)
+        self.draw_cell(self.get_head_position(), SNAKE_COLOR, BORDER_COLOR)
         if len(self.positions) > self.length:
             tail = self.positions.pop()
             self.draw_cell(tail, BOARD_BACKGROUND_COLOR)
@@ -169,12 +163,13 @@ def main():
         if snake.get_head_position() == apple.position:
             snake.length += 1
             apple.randomize_position(snake.positions)
+        else:
 
-        if snake.get_head_position() in snake.positions[1:] \
-                and snake.get_head_position() != snake.last:
-            screen.fill(BOARD_BACKGROUND_COLOR)
-            snake.reset()
-            apple.randomize_position(snake.positions)
+            if (snake.get_head_position() in snake.positions[1:]
+                    and snake.get_head_position() != snake.last):
+                screen.fill(BOARD_BACKGROUND_COLOR)
+                snake.reset()
+                apple.randomize_position(snake.positions)
 
         apple.draw()
         snake.draw()
