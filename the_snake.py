@@ -51,7 +51,7 @@ class GameObject:
 
     def draw_cell(self, position, color=None):
         """Отрисовка одной ячейки."""
-        if color is  None:
+        if color is None:
             color = self.body_color
         rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
 
@@ -165,7 +165,7 @@ def main():
             snake.length += 1
             apple.randomize_position(snake.positions)
         elif (snake.get_head_position() in snake.positions[2:]
-            and snake.get_head_position() != snake.last):
+              and snake.get_head_position() != snake.last):
             screen.fill(BOARD_BACKGROUND_COLOR)
             snake.reset()
             apple.randomize_position(snake.positions)
